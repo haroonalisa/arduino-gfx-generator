@@ -5,7 +5,9 @@ Create custom graphics and text for SSD1306 OLED displays using Adafruit GFX lib
 
 ## Description
 
-This web-based tool allows Arduino developers to easily design and generate code for graphics on SSD1306 OLED displays. Features include:
+This web-based tool allows Arduino developers to easily design and generate code for graphics on SSD1306 OLED displays. Here is an online demo: https://arduinogfxtool.netlify.app/
+
+Features include:
 
 - Interactive canvas for visual design
 - Support for pixels, lines, rectangles, circles, triangles, polygons, and text

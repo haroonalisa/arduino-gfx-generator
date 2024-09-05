@@ -62,7 +62,6 @@ let shapes = [];
 let tempShape = null;
 let polygonPoints = [];
 let pixelPoints = [];
-let selectedShapes = [];
 let isDrawing = false;
 let currentColor = 'SSD1306_WHITE';
 const fontData = [
@@ -287,7 +286,7 @@ function drawGlyph(charCode, x, y, scale = 1) {
 function drawShape(shape) {
   noStroke();
   fill(shape.color === 'SSD1306_WHITE' ? 255 : 0);
-  if(selectedShapes.includes(shapes.indexOf(shape))){
+  if(shape.selected){
     fill(0,0,255);
   }
   
@@ -653,7 +652,7 @@ function keyPressed() {
 function shiftSelecedShapes(xShift, yShift){
   for (let i = 0; i < shapes.length; i++) {
     shape = shapes[i];
-    if(selectedShapes.includes(i)){
+    if(shape.selected){
       switch(shape.type) {
         case 'pixel':
           for (let i = 0; i < shape.points.length; i++) {
@@ -741,7 +740,7 @@ function updateSidebar() {
   const sidebarList = document.getElementById('elements-list-c');
   sidebarList.innerHTML = '';
 
-  for (let i = 0; i < shapes.length; i++) {
+  for (let i = shapes.length - 1; i >= 0; i--) {
     let shape = shapes[i];
     
     const elementItem = document.createElement('div');
@@ -758,19 +757,49 @@ function updateSidebar() {
 
     const checkbox = document.createElement('input');
     checkbox.type = "checkbox";
-    checkbox.checked = selectedShapes.includes(i);
+    checkbox.checked = shapes[i].selected;
     checkbox.id = `select_${i}`;
     elementItem.appendChild(checkbox);
+
+    const button_up = document.createElement('button');
+    button_up.textContent = '⬆';
+    button_up.id = `b_up_${i}`;
+    elementItem.appendChild(button_up);
+
+    const button_down = document.createElement('button');
+    button_down.textContent = '⬇';
+    button_down.id = `b_down_${i}`;
+    elementItem.appendChild(button_down);
     
     sidebarList.appendChild(elementItem);
 
     document.getElementById(`item_${i}`).setAttribute("onclick",`event.preventDefault();deleteShape(${i})`);
-    document.getElementById(`select_${i}`).setAttribute("onclick",`if (document.getElementById('select_${i}').checked){selectedShapes.push(${i});}else{selectedShapes = selectedShapes.filter(item => item !== ${i})}`);
+
+    document.getElementById(`select_${i}`).setAttribute("onclick",`shapes[${i}].selected = document.getElementById('select_${i}').checked`);
+
+    document.getElementById(`b_up_${i}`).setAttribute("onclick",`event.preventDefault();moveUpShape(${i})`);
+    document.getElementById(`b_down_${i}`).setAttribute("onclick",`event.preventDefault();moveDownShape(${i})`);
   }
 }
 
 function deleteShape(index) {
   shapes.splice(index, 1);
+  updateSidebar();
+}
+
+function moveUpShape(index) {
+  if(index === shapes.length-1){return;}
+  let tempSwap = shapes[index];
+  shapes[index] = shapes[index+1];
+  shapes[index+1] = tempSwap;
+  updateSidebar();
+}
+
+function moveDownShape(index) {
+  if(index === 0){return;}
+  let tempSwap = shapes[index];
+  shapes[index] = shapes[index-1];
+  shapes[index-1] = tempSwap;
   updateSidebar();
 }
 

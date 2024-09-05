@@ -61,6 +61,7 @@ let currentTool = 'pixel';
 let shapes = [];
 let tempShape = null;
 let polygonPoints = [];
+let pixelPoints = [];
 let isDrawing = false;
 let currentColor = 'SSD1306_WHITE';
 const fontData = [
@@ -200,6 +201,14 @@ function draw() {
   if (tempShape) {
     drawShape(tempShape);
   }
+
+  if (currentTool === 'pixel') {
+    for (let i = 0; i < pixelPoints.length; i++) {
+      fill(currentColor === 'SSD1306_WHITE' ? 255 : 0);
+      noStroke();
+      rect(pixelPoints[i].x * pixelSize, pixelPoints[i].y * pixelSize, pixelSize, pixelSize);
+    }
+  }
   
   // Draw polygon points and lines
   if (currentTool === 'polygon' || currentTool === 'fillPolygon') {
@@ -280,7 +289,9 @@ function drawShape(shape) {
   
   switch(shape.type) {
     case 'pixel':
-      rect(shape.x * pixelSize, shape.y * pixelSize, pixelSize, pixelSize);
+      for (let i = 0; i < shape.points.length; i++) {
+        rect(shape.points[i].x * pixelSize, shape.points[i].y * pixelSize, pixelSize, pixelSize);
+      }
       break;
     case 'line':
       drawPixelatedLine(shape.x, shape.y, shape.x2, shape.y2);
@@ -509,7 +520,8 @@ function mousePressed() {
     
     switch(currentTool) {
       case 'pixel':
-        shapes.push({type: 'pixel', x: x, y: y, color: currentColor});
+        pixelPoints.push({x: x, y: y});
+        // shapes.push({type: 'pixel', x: x, y: y, color: currentColor});
         break;
       case 'line':
       case 'rect':
@@ -554,7 +566,10 @@ function mouseDragged() {
   
   if (isInsideCanvas(x, y) && isDrawing) {
     if (currentTool === 'pixel') {
-      shapes.push({type: 'pixel', x: x, y: y, color: currentColor});
+      if(!pixelPoints.some(value => { return value.x==x && value.y==y })){
+        pixelPoints.push({x: x, y: y})
+      }
+      // shapes.push({type: 'pixel', x: x, y: y, color: currentColor});
     } else if (tempShape) {
       tempShape.x2 = x;
       tempShape.y2 = y;
@@ -570,6 +585,10 @@ function mouseReleased() {
     
     if (isInsideCanvas(x, y)) {
       switch(currentTool) {
+        case 'pixel':
+          shapes.push({type: currentTool, points: [...pixelPoints], color: currentColor});
+          pixelPoints = [];
+          break;
         case 'line':
           tempShape.x2 = x;
           tempShape.y2 = y;
@@ -684,7 +703,9 @@ void setup() {
   for (let shape of shapes) {
     switch(shape.type) {
       case 'pixel':
-        code += `  display.drawPixel(${shape.x}, ${shape.y}, ${shape.color});\n`;
+        for (let i = 0; i < shape.points.length; i++) {
+          code += `  display.drawPixel(${shape.points[i].x}, ${shape.points[i].y}, ${shape.color});\n`;
+        }
         break;
       case 'line':
         code += `  display.drawLine(${shape.x}, ${shape.y}, ${shape.x2}, ${shape.y2}, ${shape.color});\n`;

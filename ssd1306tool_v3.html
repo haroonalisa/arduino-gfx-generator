@@ -62,6 +62,7 @@ let shapes = [];
 let tempShape = null;
 let polygonPoints = [];
 let pixelPoints = [];
+let selectedShapes = [];
 let isDrawing = false;
 let currentColor = 'SSD1306_WHITE';
 const fontData = [
@@ -286,6 +287,9 @@ function drawGlyph(charCode, x, y, scale = 1) {
 function drawShape(shape) {
   noStroke();
   fill(shape.color === 'SSD1306_WHITE' ? 255 : 0);
+  if(selectedShapes.includes(shapes.indexOf(shape))){
+    fill(0,0,255);
+  }
   
   switch(shape.type) {
     case 'pixel':
@@ -632,6 +636,88 @@ function keyPressed() {
     polygonPoints = [];
     updateSidebar();
   }
+  if (key === 'ArrowLeft') {
+    shiftSelecedShapes(-1,0);
+  }
+  if (key === 'ArrowRight') {
+    shiftSelecedShapes(1,0);
+  }
+  if (key === 'ArrowUp') {
+    shiftSelecedShapes(0,-1);
+  }
+  if (key === 'ArrowDown') {
+    shiftSelecedShapes(0,1);
+  }
+}
+
+function shiftSelecedShapes(xShift, yShift){
+  for (let i = 0; i < shapes.length; i++) {
+    shape = shapes[i];
+    if(selectedShapes.includes(i)){
+      switch(shape.type) {
+        case 'pixel':
+          for (let i = 0; i < shape.points.length; i++) {
+            shape.points[i].x +=xShift;
+            shape.points[i].y +=yShift;
+          }
+          break;
+        case 'line':
+          shape.x += xShift;
+          shape.y += yShift;
+          shape.x2 += xShift;
+          shape.y2 += yShift;
+          break;
+        case 'rect':
+          shape.x += xShift;
+          shape.y += yShift;
+          break;
+        case 'fillRect':
+          shape.x += xShift;
+          shape.y += yShift;
+          break;
+        case 'circle':
+          shape.x += xShift;
+          shape.y += yShift;
+          break;
+        case 'fillCircle':
+          shape.x += xShift;
+          shape.y += yShift;
+          break;
+        case 'triangle':
+          shape.x1 += xShift;
+          shape.y1 += yShift;
+          shape.x2 += xShift;
+          shape.y2 += yShift;
+          shape.x3 += xShift;
+          shape.y3 += yShift;
+          break;
+        case 'fillTriangle':
+          shape.x1 += xShift;
+          shape.y1 += yShift;
+          shape.x2 += xShift;
+          shape.y2 += yShift;
+          shape.x3 += xShift;
+          shape.y3 += yShift;
+          break;
+        case 'text':
+          shape.x += xShift;
+          shape.y += yShift;
+          break;
+        case 'polygon':
+          for (let i = 0; i < shape.points.length; i++) {
+            shape.points[i].x +=xShift;
+            shape.points[i].y +=yShift;
+          }
+          break;
+        case 'fillPolygon':
+          for (let i = 0; i < shape.points.length; i++) {
+            shape.points[i].x +=xShift;
+            shape.points[i].y +=yShift;
+          }
+          break;
+      }
+    }
+  }
 }
 
 function setTool(tool) {
@@ -669,10 +755,17 @@ function updateSidebar() {
     button_c.textContent = 'Delete';
     button_c.id = `item_${i}`;
     elementItem.appendChild(button_c);
+
+    const checkbox = document.createElement('input');
+    checkbox.type = "checkbox";
+    checkbox.checked = selectedShapes.includes(i);
+    checkbox.id = `select_${i}`;
+    elementItem.appendChild(checkbox);
     
     sidebarList.appendChild(elementItem);
 
     document.getElementById(`item_${i}`).setAttribute("onclick",`event.preventDefault();deleteShape(${i})`);
+    document.getElementById(`select_${i}`).setAttribute("onclick",`if (document.getElementById('select_${i}').checked){selectedShapes.push(${i});}else{selectedShapes = selectedShapes.filter(item => item !== ${i})}`);
   }
 }
 

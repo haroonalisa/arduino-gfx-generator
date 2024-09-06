@@ -46,6 +46,7 @@
   </div>
   <div id="sidebar">
     <h2>Elements</h2>
+    <button onclick="newGroupSelected()">New Group</button>
     <div id="elements-list-c">
       <div class="element-item">
       <span>Isa</span>
@@ -195,12 +196,12 @@ function draw() {
   
   // Draw all shapes
   for (let shape of shapes) {
-    drawShape(shape);
+    drawShape(shape, 0, 0);
   }
   
   // Draw temporary shape
   if (tempShape) {
-    drawShape(tempShape);
+    drawShape(tempShape, 0, 0);
   }
 
   if (currentTool === 'pixel') {
@@ -284,7 +285,7 @@ function drawGlyph(charCode, x, y, scale = 1) {
     }
 }
 
-function drawShape(shape) {
+function drawShape(shape, refX, refY) {
   noStroke();
   fill(shape.color === 'SSD1306_WHITE' ? 255 : 0);
   if(shape.selected){
@@ -292,34 +293,39 @@ function drawShape(shape) {
   }
   
   switch(shape.type) {
+    case 'group':
+      for (let groupItem of shape.groupItems) {
+        drawShape(groupItem, shape.x, shape.y);
+      }
+    break;
     case 'pixel':
       for (let i = 0; i < shape.points.length; i++) {
-        rect(shape.points[i].x * pixelSize, shape.points[i].y * pixelSize, pixelSize, pixelSize);
+        rect((shape.points[i].x + refX) * pixelSize, (shape.points[i].y + refY) * pixelSize, pixelSize, pixelSize);
       }
       break;
     case 'line':
-      drawPixelatedLine(shape.x, shape.y, shape.x2, shape.y2);
+      drawPixelatedLine(shape.x + refX, shape.y + refY, shape.x2, shape.y2);
       break;
     case 'rect':
-      drawPixelatedRect(shape.x, shape.y, shape.w, shape.h, false);
+      drawPixelatedRect(shape.x + refX, shape.y + refY, shape.w, shape.h, false);
       break;
     case 'fillRect':
-      drawPixelatedRect(shape.x, shape.y, shape.w, shape.h, true);
+      drawPixelatedRect(shape.x + refX, shape.y + refY, shape.w, shape.h, true);
       break;
     case 'circle':
-      drawPixelatedCircle(shape.x, shape.y, shape.r, false);
+      drawPixelatedCircle(shape.x + refX, shape.y + refY, shape.r, false);
       break;
     case 'fillCircle':
-      drawPixelatedCircle(shape.x, shape.y, shape.r, true);
+      drawPixelatedCircle(shape.x + refX, shape.y + refY, shape.r, true);
       break;
     case 'triangle':
-      drawPixelatedTriangle(shape.x1, shape.y1, shape.x2, shape.y2, shape.x3, shape.y3, false);
+      drawPixelatedTriangle(shape.x1 + refX, shape.y1 + refY, shape.x2 + refX, shape.y2 + refY, shape.x3 + refX, shape.y3 + refY, false);
       break;
     case 'fillTriangle':
-      drawPixelatedTriangle(shape.x1, shape.y1, shape.x2, shape.y2, shape.x3, shape.y3, true);
+      drawPixelatedTriangle(shape.x1 + refX, shape.y1 + refY, shape.x2 + refX, shape.y2 + refY, shape.x3 + refX, shape.y3 + refY, true);
       break;
     case 'text':
-      drawPixelatedText(shape.text, shape.x, shape.y, shape.size);
+      drawPixelatedText(shape.text, shape.x + refX, shape.y + refY, shape.size);
       break;
     case 'polygon':
       for (let i = 0; i < shape.points.length; i++) {
@@ -328,20 +334,14 @@ function drawShape(shape) {
         }
         let point = shape.points[i];
         let nextPoint = shape.points[(i + 1) % shape.points.length];
-        drawPixelatedLine(point.x, point.y, nextPoint.x, nextPoint.y);
+        drawPixelatedLine(point.x + refX, point.y + refY, nextPoint.x, nextPoint.y);
       }
       break;
     case 'fillPolygon':
-      // fill(shape.color === 'SSD1306_WHITE' ? 255 : 0);
-      // beginShape();
-      // for (let point of shape.points) {
-      //   vertex(point.x * pixelSize, point.y * pixelSize);
-      // }
-      // endShape(CLOSE);
       const triangles = triangulate(shape.points);
       triangles.forEach(triangle => {
           const [p1, p2, p3] = triangle;
-          drawPixelatedTriangle(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, true);
+          drawPixelatedTriangle(p1.x + refX, p1.y + refY, p2.x + refX, p2.y + refY, p3.x+ refX, p3.y + refY, true);
       });
       break;
   }
@@ -635,22 +635,22 @@ function keyPressed() {
     updateSidebar();
   }
   if (key === 'ArrowLeft') {
-    shiftSelecedShapes(-1,0);
+    shiftShapes(shapes,-1,0);
   }
   if (key === 'ArrowRight') {
-    shiftSelecedShapes(1,0);
+    shiftShapes(shapes,1,0);
   }
   if (key === 'ArrowUp') {
-    shiftSelecedShapes(0,-1);
+    shiftShapes(shapes,0,-1);
   }
   if (key === 'ArrowDown') {
-    shiftSelecedShapes(0,1);
+    shiftShapes(shapes,0,1);
   }
 }
 
-function shiftSelecedShapes(xShift, yShift){
-  for (let i = 0; i < shapes.length; i++) {
-    shape = shapes[i];
+function shiftShapes(itemList, xShift, yShift){
+  for (let i = 0; i < itemList.length; i++) {
+    shape = itemList[i];
     if(shape.selected){
       switch(shape.type) {
         case 'pixel':
@@ -678,6 +678,10 @@ function shiftSelecedShapes(xShift, yShift){
           shape.y += yShift;
           break;
         case 'fillCircle':
+          shape.x += xShift;
+          shape.y += yShift;
+          break;
+        case 'group':
           shape.x += xShift;
           shape.y += yShift;
           break;
@@ -769,16 +773,63 @@ function updateSidebar() {
     button_down.textContent = '⬇';
     button_down.id = `b_down_${i}`;
     elementItem.appendChild(button_down);
+
+    if(shapes[i].type === 'group'){
+      const button_ungroup = document.createElement('button');
+      button_ungroup.textContent = '⛶';
+      button_ungroup.id = `b_ungroup_${i}`;
+      elementItem.appendChild(button_ungroup);
+    }
     
     sidebarList.appendChild(elementItem);
 
     document.getElementById(`item_${i}`).setAttribute("onclick",`event.preventDefault();deleteShape(${i})`);
 
-    document.getElementById(`select_${i}`).setAttribute("onclick",`shapes[${i}].selected = document.getElementById('select_${i}').checked`);
+    document.getElementById(`select_${i}`).setAttribute("onclick",`shapes[${i}].selected = document.getElementById('select_${i}').checked; 
+      if(shapes[${i}].type === 'group'){
+        shapes[${i}].groupItems.forEach(function(v) {
+          v.selected = document.getElementById('select_${i}').checked;
+        });
+      }`);
 
     document.getElementById(`b_up_${i}`).setAttribute("onclick",`event.preventDefault();moveUpShape(${i})`);
     document.getElementById(`b_down_${i}`).setAttribute("onclick",`event.preventDefault();moveDownShape(${i})`);
+
+    if(document.getElementById(`b_ungroup_${i}`)){
+      document.getElementById(`b_ungroup_${i}`).setAttribute("onclick",`event.preventDefault();ungroup(${i})`);
+    }
   }
+}
+
+function newGroupSelected(){
+  let minId = shapes.indexOf(shapes.find(x => x.selected));
+  let groupX = 999;
+  let groupY = 999;
+
+  let groupItems = shapes.filter(shape => (shape.selected));
+  groupItems.forEach(function(v) {
+    groupX = v.x < groupX ? v.x:groupX;
+    groupY = v.y < groupY ? v.y:groupY;
+  })
+  shiftShapes(groupItems, -1*groupX, -1*groupY);
+  shapes = shapes.filter(shape => !(shape.selected));
+  shapes.splice(minId, 0, {type: 'group', x:groupX, y:groupY, groupItems:[...groupItems], id:"group " + shapeCounter++, selected:true})
+  updateSidebar();
+
+}
+
+function ungroup(index){
+  let groupItems = shapes[index].groupItems;
+  shapes.forEach(function(v) {
+    v.selected = false;
+  })
+  groupItems.forEach(function(v) {
+    v.selected = true;
+  })
+  shiftShapes(groupItems, shapes[index].x, shapes[index].y);
+  shapes.splice(index,1);
+  shapes.splice(index,0,...groupItems);
+  updateSidebar();
 }
 
 function deleteShape(index) {
@@ -821,60 +872,7 @@ void setup() {
   // Draw shapes
 `;
 
-  for (let shape of shapes) {
-    code +=  `  //id: ${shapes.indexOf(shape)} ${shape.type} \n`
-    switch(shape.type) {
-      case 'pixel':
-        for (let i = 0; i < shape.points.length; i++) {
-          code += `  display.drawPixel(${shape.points[i].x}, ${shape.points[i].y}, ${shape.color});\n`;
-        }
-        break;
-      case 'line':
-        code += `  display.drawLine(${shape.x}, ${shape.y}, ${shape.x2}, ${shape.y2}, ${shape.color});\n`;
-        break;
-      case 'rect':
-        code += `  display.drawRect(${shape.x}, ${shape.y}, ${shape.w}, ${shape.h}, ${shape.color});\n`;
-        break;
-      case 'fillRect':
-        code += `  display.fillRect(${shape.x}, ${shape.y}, ${shape.w}, ${shape.h}, ${shape.color});\n`;
-        break;
-      case 'circle':
-        code += `  display.drawCircle(${shape.x}, ${shape.y}, ${Math.round(shape.r)}, ${shape.color});\n`;
-        break;
-      case 'fillCircle':
-        code += `  display.fillCircle(${shape.x}, ${shape.y}, ${Math.round(shape.r)}, ${shape.color});\n`;
-        break;
-      case 'triangle':
-        code += `  display.drawTriangle(${shape.x1}, ${shape.y1}, ${shape.x2}, ${shape.y2}, ${shape.x3}, ${shape.y3}, ${shape.color});\n`;
-        break;
-      case 'fillTriangle':
-        code += `  display.fillTriangle(${shape.x1}, ${shape.y1}, ${shape.x2}, ${shape.y2}, ${shape.x3}, ${shape.y3}, ${shape.color});\n`;
-        break;
-      case 'text':
-        code += `  display.setTextSize(${shape.size});\n`;
-        code += `  display.setTextColor(${shape.color});\n`;
-        code += `  display.setCursor(${shape.x}, ${shape.y});\n`;
-        code += `  display.print(F("${shape.text}"));\n`;
-        break;
-      case 'polygon':
-        for (let i = 0; i < shape.points.length; i++) {
-          let point = shape.points[i];
-          if(shape.closed === false && i === shape.points.length-1){
-            break;
-          }
-          let nextPoint = shape.points[(i + 1) % shape.points.length];
-          code += `  display.drawLine(${point.x}, ${point.y}, ${nextPoint.x}, ${nextPoint.y}, ${shape.color});\n`;
-        }
-        break;
-      case 'fillPolygon':
-          const triangles = triangulate(shape.points);
-          triangles.forEach(triangle => {
-              const [p1, p2, p3] = triangle;
-              code += `  display.fillTriangle(${p1.x}, ${p1.y}, ${p2.x}, ${p2.y}, ${p3.x}, ${p3.y}, ${shape.color});\n`;
-          });
-        break;
-    }
-  }
+  code += appendCode(shapes, code);
 
   code += `
   display.display();
@@ -885,6 +883,68 @@ void loop() {
 }`;
 
   document.getElementById('output').value = code;
+}
+
+function appendCode(itemList){
+  codeString = '';
+  for (let shape of itemList) {
+    codeString +=  `  //id: ${itemList.indexOf(shape)} ${shape.type} \n`
+    switch(shape.type) {
+      case 'group':
+        codeString += appendCode(shape.groupItems);
+        break;
+      case 'pixel':
+        for (let i = 0; i < shape.points.length; i++) {
+          codeString += `  display.drawPixel(${shape.points[i].x}, ${shape.points[i].y}, ${shape.color});\n`;
+        }
+        break;
+      case 'line':
+        codeString += `  display.drawLine(${shape.x}, ${shape.y}, ${shape.x2}, ${shape.y2}, ${shape.color});\n`;
+        break;
+      case 'rect':
+        codeString += `  display.drawRect(${shape.x}, ${shape.y}, ${shape.w}, ${shape.h}, ${shape.color});\n`;
+        break;
+      case 'fillRect':
+        codeString += `  display.fillRect(${shape.x}, ${shape.y}, ${shape.w}, ${shape.h}, ${shape.color});\n`;
+        break;
+      case 'circle':
+        codeString += `  display.drawCircle(${shape.x}, ${shape.y}, ${Math.round(shape.r)}, ${shape.color});\n`;
+        break;
+      case 'fillCircle':
+        codeString += `  display.fillCircle(${shape.x}, ${shape.y}, ${Math.round(shape.r)}, ${shape.color});\n`;
+        break;
+      case 'triangle':
+        codeString += `  display.drawTriangle(${shape.x1}, ${shape.y1}, ${shape.x2}, ${shape.y2}, ${shape.x3}, ${shape.y3}, ${shape.color});\n`;
+        break;
+      case 'fillTriangle':
+        codeString += `  display.fillTriangle(${shape.x1}, ${shape.y1}, ${shape.x2}, ${shape.y2}, ${shape.x3}, ${shape.y3}, ${shape.color});\n`;
+        break;
+      case 'text':
+        codeString += `  display.setTextSize(${shape.size});\n`;
+        codeString += `  display.setTextColor(${shape.color});\n`;
+        codeString += `  display.setCursor(${shape.x}, ${shape.y});\n`;
+        codeString += `  display.print(F("${shape.text}"));\n`;
+        break;
+      case 'polygon':
+        for (let i = 0; i < shape.points.length; i++) {
+          let point = shape.points[i];
+          if(shape.closed === false && i === shape.points.length-1){
+            break;
+          }
+          let nextPoint = shape.points[(i + 1) % shape.points.length];
+          codeString += `  display.drawLine(${point.x}, ${point.y}, ${nextPoint.x}, ${nextPoint.y}, ${shape.color});\n`;
+        }
+        break;
+      case 'fillPolygon':
+          const triangles = triangulate(shape.points);
+          triangles.forEach(triangle => {
+              const [p1, p2, p3] = triangle;
+              codeString += `  display.fillTriangle(${p1.x}, ${p1.y}, ${p2.x}, ${p2.y}, ${p3.x}, ${p3.y}, ${shape.color});\n`;
+          });
+        break;        
+    }
+  }
+  return codeString;
 }
 </script>
 </body></html>

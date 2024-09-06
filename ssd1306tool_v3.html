@@ -59,6 +59,7 @@ let canvas;
 let pixelSize = 4;
 let currentTool = 'pixel';
 let shapes = [];
+let shapeCounter = 0;
 let tempShape = null;
 let polygonPoints = [];
 let pixelPoints = [];
@@ -524,19 +525,18 @@ function mousePressed() {
     switch(currentTool) {
       case 'pixel':
         pixelPoints.push({x: x, y: y});
-        // shapes.push({type: 'pixel', x: x, y: y, color: currentColor});
         break;
       case 'line':
       case 'rect':
       case 'fillRect':
       case 'circle':
       case 'fillCircle':
-        tempShape = {type: currentTool, x: x, y: y, x2: x, y2: y, color: currentColor};
+        tempShape = {type: currentTool, x: x, y: y, x2: x, y2: y, color: currentColor, id:currentTool + " " + shapeCounter++};
         break;
       case 'triangle':
       case 'fillTriangle':
         if (!tempShape) {
-          tempShape = {type: currentTool, x1: x, y1: y, x2: x, y2: y, x3: x, y3: y, color: currentColor};
+          tempShape = {type: currentTool, x1: x, y1: y, x2: x, y2: y, x3: x, y3: y, color: currentColor, id:currentTool + " " + shapeCounter++};
         } else if (tempShape.x2 === tempShape.x3 && tempShape.y2 === tempShape.y3) {
           tempShape.x2 = x;
           tempShape.y2 = y;
@@ -551,7 +551,7 @@ function mousePressed() {
         let input = prompt('Enter text:');
         if (input) {
           let size = parseInt(prompt('Enter text size (1-5):'));
-          shapes.push({type: 'text', x: x, y: y, text: input, size: size, color: currentColor});
+          shapes.push({type: 'text', x: x, y: y, text: input, size: size, color: currentColor, id:currentTool + " " + shapeCounter++});
         }
         break;
       case 'polygon':
@@ -572,7 +572,6 @@ function mouseDragged() {
       if(!pixelPoints.some(value => { return value.x==x && value.y==y })){
         pixelPoints.push({x: x, y: y})
       }
-      // shapes.push({type: 'pixel', x: x, y: y, color: currentColor});
     } else if (tempShape) {
       tempShape.x2 = x;
       tempShape.y2 = y;
@@ -589,7 +588,7 @@ function mouseReleased() {
     if (isInsideCanvas(x, y)) {
       switch(currentTool) {
         case 'pixel':
-          shapes.push({type: currentTool, points: [...pixelPoints], color: currentColor});
+          shapes.push({type: currentTool, points: [...pixelPoints], color: currentColor, id:currentTool + " " + shapeCounter++});
           pixelPoints = [];
           break;
         case 'line':
@@ -626,12 +625,12 @@ function isInsideCanvas(x, y) {
 
 function keyPressed() {
   if (key === 'Enter' && (currentTool === 'polygon' || currentTool === 'fillPolygon') && polygonPoints.length > 2) {
-    shapes.push({type: currentTool, points: [...polygonPoints], color: currentColor, closed: true});
+    shapes.push({type: currentTool, points: [...polygonPoints], color: currentColor, closed: true, id:currentTool + " " + shapeCounter++});
     polygonPoints = [];
     updateSidebar();
   }
   if (key === 'Escape' && (currentTool === 'polygon') && polygonPoints.length > 2) {
-    shapes.push({type: currentTool, points: [...polygonPoints], color: currentColor, closed: false});
+    shapes.push({type: currentTool, points: [...polygonPoints], color: currentColor, closed: false, id:currentTool + " " + shapeCounter++});
     polygonPoints = [];
     updateSidebar();
   }
@@ -747,7 +746,7 @@ function updateSidebar() {
     elementItem.className = 'element-item';
     
     const span = document.createElement('span');
-    span.textContent = shape.type;
+    span.textContent = shape.id;
     elementItem.appendChild(span);
     
     const button_c = document.createElement('button');
@@ -823,6 +822,7 @@ void setup() {
 `;
 
   for (let shape of shapes) {
+    code +=  `  //id: ${shapes.indexOf(shape)} ${shape.type} \n`
     switch(shape.type) {
       case 'pixel':
         for (let i = 0; i < shape.points.length; i++) {

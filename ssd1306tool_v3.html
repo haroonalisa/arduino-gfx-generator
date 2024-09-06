@@ -1,6 +1,6 @@
 <html><head>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
-<title>Arduino AdafruitGFX SSD1306 OLED Code Generator</title>
+<title>Online Arduino AdafruitGFX SSD1306 OLED Code Generator</title>
 <style>
   body { font-family: Arial, sans-serif; display: flex; flex-direction: row; background-color: #f0f0f0; }
   #main-content { flex: 1; display: flex; flex-direction: column; align-items: center; }
@@ -20,7 +20,7 @@
 </head>
 <body>
   <div id="main-content">
-    <h1>Arduino AdafruitGFX SSD1306 OLED Code Generator</h1>
+    <h1>Online Arduino AdafruitGFX SSD1306 OLED Code Generator</h1>
     <div id="canvas-container"></div>
     <div id="controls">
       <button onclick="setTool('pixel')">Pixel</button>
@@ -334,7 +334,7 @@ function drawShape(shape, refX, refY) {
         }
         let point = shape.points[i];
         let nextPoint = shape.points[(i + 1) % shape.points.length];
-        drawPixelatedLine(point.x + refX, point.y + refY, nextPoint.x, nextPoint.y);
+        drawPixelatedLine(point.x + refX, point.y + refY, nextPoint.x + refX, nextPoint.y + refY);
       }
       break;
     case 'fillPolygon':
@@ -872,7 +872,7 @@ void setup() {
   // Draw shapes
 `;
 
-  code += appendCode(shapes, code);
+  code += appendCode(shapes);
 
   code += `
   display.display();
@@ -885,44 +885,52 @@ void loop() {
   document.getElementById('output').value = code;
 }
 
-function appendCode(itemList){
-  codeString = '';
+function appendCode(itemList, refName='', refX=0, refY=0){
+  let codeString = '\n';
+  let refNameX = refName === ''?'':' + ' + refName + '_x';
+  let refNameY = refName === ''?'':' + ' + refName + '_y';
+  if(refName != ''){
+    codeString +=  `  uint8_t ${refName}_x = ${refX};\n`
+    codeString +=  `  uint8_t ${refName}_y = ${refY};\n`
+  }
   for (let shape of itemList) {
-    codeString +=  `  //id: ${itemList.indexOf(shape)} ${shape.type} \n`
+    codeString +=  `  //id: ${itemList.indexOf(shape)} ${shape.id} \n`
     switch(shape.type) {
       case 'group':
-        codeString += appendCode(shape.groupItems);
+        let groupVarName = shape.id.replace(/\W/g, '');
+        codeString += appendCode(shape.groupItems, groupVarName, shape.x, shape.y);
+        codeString += '\n'
         break;
       case 'pixel':
         for (let i = 0; i < shape.points.length; i++) {
-          codeString += `  display.drawPixel(${shape.points[i].x}, ${shape.points[i].y}, ${shape.color});\n`;
+          codeString += `  display.drawPixel(${shape.points[i].x}${refNameX}, ${shape.points[i].y}${refNameY}, ${shape.color});\n`;
         }
         break;
       case 'line':
-        codeString += `  display.drawLine(${shape.x}, ${shape.y}, ${shape.x2}, ${shape.y2}, ${shape.color});\n`;
+        codeString += `  display.drawLine(${shape.x}${refNameX}, ${shape.y}${refNameY}, ${shape.x2}${refNameX}, ${shape.y2}${refNameY}, ${shape.color});\n`;
         break;
       case 'rect':
-        codeString += `  display.drawRect(${shape.x}, ${shape.y}, ${shape.w}, ${shape.h}, ${shape.color});\n`;
+        codeString += `  display.drawRect(${shape.x}${refNameX}, ${shape.y}${refNameY}, ${shape.w}, ${shape.h}, ${shape.color});\n`;
         break;
       case 'fillRect':
-        codeString += `  display.fillRect(${shape.x}, ${shape.y}, ${shape.w}, ${shape.h}, ${shape.color});\n`;
+        codeString += `  display.fillRect(${shape.x}${refNameX}, ${shape.y}${refNameY}, ${shape.w}, ${shape.h}, ${shape.color});\n`;
         break;
       case 'circle':
-        codeString += `  display.drawCircle(${shape.x}, ${shape.y}, ${Math.round(shape.r)}, ${shape.color});\n`;
+        codeString += `  display.drawCircle(${shape.x}${refNameX}, ${shape.y}${refNameY}, ${Math.round(shape.r)}, ${shape.color});\n`;
         break;
       case 'fillCircle':
-        codeString += `  display.fillCircle(${shape.x}, ${shape.y}, ${Math.round(shape.r)}, ${shape.color});\n`;
+        codeString += `  display.fillCircle(${shape.x}${refNameX}, ${shape.y}${refNameY}, ${Math.round(shape.r)}, ${shape.color});\n`;
         break;
       case 'triangle':
-        codeString += `  display.drawTriangle(${shape.x1}, ${shape.y1}, ${shape.x2}, ${shape.y2}, ${shape.x3}, ${shape.y3}, ${shape.color});\n`;
+        codeString += `  display.drawTriangle(${shape.x1}${refNameX}, ${shape.y1}${refNameY}, ${shape.x2}${refNameX}, ${shape.y2}${refNameY}, ${shape.x3}${refNameX}, ${shape.y3}${refNameY}, ${shape.color});\n`;
         break;
       case 'fillTriangle':
-        codeString += `  display.fillTriangle(${shape.x1}, ${shape.y1}, ${shape.x2}, ${shape.y2}, ${shape.x3}, ${shape.y3}, ${shape.color});\n`;
+        codeString += `  display.fillTriangle(${shape.x1}${refNameX}, ${shape.y1}${refNameY}, ${shape.x2}${refNameX}, ${shape.y2}${refNameY}, ${shape.x3}${refNameX}, ${shape.y3}${refNameY}, ${shape.color});\n`;
         break;
       case 'text':
         codeString += `  display.setTextSize(${shape.size});\n`;
         codeString += `  display.setTextColor(${shape.color});\n`;
-        codeString += `  display.setCursor(${shape.x}, ${shape.y});\n`;
+        codeString += `  display.setCursor(${shape.x}${refNameX}, ${shape.y}${refNameY});\n`;
         codeString += `  display.print(F("${shape.text}"));\n`;
         break;
       case 'polygon':
@@ -932,14 +940,14 @@ function appendCode(itemList){
             break;
           }
           let nextPoint = shape.points[(i + 1) % shape.points.length];
-          codeString += `  display.drawLine(${point.x}, ${point.y}, ${nextPoint.x}, ${nextPoint.y}, ${shape.color});\n`;
+          codeString += `  display.drawLine(${point.x}${refNameX}, ${point.y}${refNameY}, ${nextPoint.x}${refNameX}, ${nextPoint.y}${refNameY}, ${shape.color});\n`;
         }
         break;
       case 'fillPolygon':
           const triangles = triangulate(shape.points);
           triangles.forEach(triangle => {
               const [p1, p2, p3] = triangle;
-              codeString += `  display.fillTriangle(${p1.x}, ${p1.y}, ${p2.x}, ${p2.y}, ${p3.x}, ${p3.y}, ${shape.color});\n`;
+              codeString += `  display.fillTriangle(${p1.x}${refNameX}, ${p1.y}${refNameY}, ${p2.x}${refNameX}, ${p2.y}${refNameY}, ${p3.x}${refNameX}, ${p3.y}${refNameY}, ${shape.color});\n`;
           });
         break;        
     }

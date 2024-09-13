@@ -1,0 +1,334 @@
+
+body{
+    --backrground: #17181A;
+    --colour: #838090;
+    --border-c: #212224;
+    --border: solid 1px var(--border-c);
+    --primary: #AB65FA;
+    --secondary: #1E2223;
+    --white: white;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: row;
+    background-color: #f0f0f0;
+    margin: 0;
+}
+
+#main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: calc(80vh - 114px);
+    position: relative;
+}
+
+#main-content .buttons-sec {
+    position: absolute;
+    right: 12px;
+    top: 12px;
+}
+
+#canvas-container {
+    margin: 20px;
+    border: 2px solid #333;
+}
+
+#controls {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px;
+    border-right: var(--border);
+}
+
+button {
+    padding: 10px;
+    font-size: 14px;
+    cursor: pointer;
+    background-color: var(--secondary);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    transition-duration: 0.2s;
+}
+
+#controls button{
+    position: relative;
+}
+
+#controls button .tooltip{
+    opacity: 0;
+    max-width: 0;
+    transition-duration: 0.5s;
+    position: absolute;
+    overflow: hidden;
+    left: calc(100% + 8px);
+    top: 4px;
+    padding: 8px;
+    white-space: nowrap;
+    background: var(--border-c);
+    border-radius: 5px;
+}
+#controls button:hover .tooltip{
+    opacity: 1;
+    max-width: 200px;
+}
+
+#controls button img {
+    height: 20px;
+    filter: invert(1) brightness(119%) contrast(200%);
+}
+
+button:hover {
+    background-color: var(--primary);
+}
+
+#output {
+    width: 100%;
+    height: 178px;
+    font-family: monospace;
+    background: var(--secondary);
+    color: var(--white);
+    border-radius: 0;
+    outline: none;
+    padding: 8px;
+}
+
+#instructions {
+    font-style: italic;
+    padding: 12px;
+    width: 100%;
+    border-top: var(--border);
+}
+
+#sidebar {
+    width: 320px;
+    background-color: var(--backrground);
+    overflow-y: auto;
+    border-left: var(--border);
+    display: flex;
+    flex-direction: column;
+}
+
+#sidebar h2 {
+    margin-top: 0;
+    padding: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    background: var(--secondary);
+}
+
+
+#controls,#main-content, #sidebar{
+    max-height: calc(100vh - 310px);
+    box-sizing: border-box;
+    overflow: hidden;
+    overflow-y: auto;
+}
+
+.new-group-btn {
+    margin: 8px;
+    float: right;
+}
+#elements-list-c{
+    /* background: var(--secondary); */
+    height: 100%;
+    border-top: var(--border);
+}
+
+.element-item {
+    background-color: var(--secondary);
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    border-bottom: solid 1px var(--backrground);
+}
+.element-item label{
+    width: 100%;
+}
+
+.element-item button {
+    background-color: var(--secondary);
+    padding: 4px;
+    border: solid 1px var(--backrground);
+    height: 32px;
+}
+.element-item button.arrow-btn{
+    aspect-ratio: 1;
+    color: var(--colour);
+}
+.element-item button.arrow-btn:hover{
+    color: white;
+}
+.element-item button img {
+    height: 100%;
+    transition-duration: 0.2s;
+}
+.element-item button:hover img{
+    filter: invert(1) grayscale(1) brightness(1) contrast(100);
+}
+
+.element-item button:hover {
+    background-color: var(--primary);
+}
+
+select {
+    padding: 5px;
+    font-size: 14px;
+    background: var(--secondary);
+}
+
+#colorSelect{
+    aspect-ratio: 1;
+    /* color: transparent; */
+    background: black;
+    appearance: none;
+    color: white;
+}
+
+#colorSelect.white {
+    background: white;
+    color: black;
+}
+select::-ms-expand {
+    display: none;
+  }
+
+/* styling styling */
+
+
+body{
+    background: var(--backrground);
+    color: var(--colour);
+}
+h1,h2,h3,h4,h5,h6,p{
+    margin: 0;
+}
+.header-sec{
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    width: 100%;
+    height: fit-content;
+    padding: 22px;
+    border-bottom: var(--border);
+}
+.header-sec h1{
+    font-weight: 500;
+    font-size: 1.4rem;
+    /* color: var(--primary); */
+}
+.tool-body{
+    display: flex;
+    flex-wrap: wrap;
+}
+
+
+/* Firefox (uncomment to work in Firefox, although other properties will not work!)  */
+/** {
+  scrollbar-width: thin;
+  scrollbar-color: #397524 #DFE9EB;
+}*/
+
+/* Chrome, Edge and Safari */
+*::-webkit-scrollbar {
+    height: 5px;
+    width: 5px;
+  }
+  *::-webkit-scrollbar-track {
+    border-radius: 5px;
+    background-color: var(--secondary);
+  }
+  
+  *::-webkit-scrollbar-track:hover {
+    background-color: var(--secondary);
+  }
+  
+  *::-webkit-scrollbar-track:active {
+    background-color: var(--border-c);
+  }
+  
+  *::-webkit-scrollbar-thumb {
+    border-radius: 5px;
+    background-color: var(--colour);
+  }
+  
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: var(--primary);
+  }
+  
+  *::-webkit-scrollbar-thumb:active {
+    background-color: var(--primary);
+  }
+
+  @media screen and (max-width: 768px) {
+    #controls, #main-content, #sidebar {
+        width: 100%;
+        max-height: unset;
+    }
+    #controls {
+        flex-direction: row;
+        width: 100%;
+        order: 2;
+        flex-wrap: wrap;
+    }
+    #main-content{
+        order: 1;
+    }
+
+    #instructions{
+        order: 2;
+        font-size: 0.8rem;
+        padding: 8px;
+        box-sizing: border-box;
+    }
+    #sidebar {
+        order: 3;
+    }
+    #output{
+        order: 4;
+        box-sizing: border-box;
+    }
+    .header-sec{
+        padding: 12px;
+        box-sizing: border-box;
+    }
+    .header-sec h1 {
+        font-size: 1rem;
+    }
+    #main-content .buttons-sec{
+        position: static;
+    }
+    .tool-body {
+        flex-direction: column;
+        overflow: hidden;
+        overflow-y: auto;
+    }
+    canvas{
+        aspect-ratio: auto 1024 / 512;
+        height: auto !important;
+        width: 100% !important;
+        touch-action: none
+    }
+    #controls button{
+        position: static;
+    }
+    #controls button:hover .tooltip {
+        z-index: 3;
+        background: black;
+        font-size: 0.8rem;
+        left: unset;
+        top: unset;
+    }
+    html,body{
+        overflow-x: hidden;
+        position: relative;
+    }
+  }
+/* styling styling */
